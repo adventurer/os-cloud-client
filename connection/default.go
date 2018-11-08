@@ -14,7 +14,8 @@ import (
 )
 
 var (
-	Conn net.Conn
+	Conn      net.Conn
+	IsConnect bool
 )
 
 func init() {
@@ -22,14 +23,10 @@ func init() {
 	wg.Add(1)
 	go Connect(wg)
 	wg.Wait()
-	wg.Add(1)
-	go keepAlive(wg)
-	wg.Wait()
-
+	go keepAlive()
 }
 
-func keepAlive(wg *sync.WaitGroup) {
-	wg.Done()
+func keepAlive() {
 	for {
 		_, err := Conn.Write([]byte("ping\n"))
 		if err != nil {
@@ -40,12 +37,12 @@ func keepAlive(wg *sync.WaitGroup) {
 				log.Println("Error reconnecting:", err)
 				os.Exit(1)
 			}
+			IsConnect = true
 			log.Println("reconnected...")
 		}
 		// 10 seconds a heart beat package
 		time.Sleep(10 * time.Second)
 	}
-
 }
 
 func Connect(wg *sync.WaitGroup) {
@@ -56,6 +53,7 @@ func Connect(wg *sync.WaitGroup) {
 		log.Println("Error connecting:", err)
 		os.Exit(1)
 	}
+	IsConnect = true
 }
 
 func HandleWrite(wg *sync.WaitGroup, msg Msg) {
@@ -78,13 +76,13 @@ func HandleWrite(wg *sync.WaitGroup, msg Msg) {
 }
 
 func HandleRead(wg *sync.WaitGroup) {
-	wg.Done()
+	defer wg.Done()
 	reader := bufio.NewReader(Conn)
 	message, err := reader.ReadString('\n')
 	message = strings.TrimSpace(message)
 	if err != nil {
+		IsConnect = false
 		log.Print("Error to read message because of:", err)
-		return
 	}
 	// log.Printf("receve:%#v\n", message)
 }

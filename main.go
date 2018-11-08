@@ -23,11 +23,13 @@ func main() {
 func begin() {
 	var wg = new(sync.WaitGroup)
 	for {
-		var msg connection.Msg
-		msg = <-message.Msg
-		wg.Add(2)
-		connection.HandleWrite(wg, msg)
-		connection.HandleRead(wg)
-		wg.Wait()
+		if connection.IsConnect {
+			var msg connection.Msg
+			msg = <-message.Msg
+			wg.Add(2)
+			connection.HandleWrite(wg, msg)
+			connection.HandleRead(wg)
+			wg.Wait()
+		}
 	}
 }
