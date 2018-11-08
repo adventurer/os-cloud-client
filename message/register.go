@@ -3,6 +3,7 @@ package message
 import (
 	"encoding/json"
 	"log"
+	"os-cloud-client/configure"
 	"os-cloud-client/connection"
 	"time"
 
@@ -24,7 +25,7 @@ func Register() {
 		log.Println(err)
 		return
 	}
-	data := Client{Uid: "sdfsf", Host: info.Hostname, Os: info.OS, Uptime: info.Uptime, Alive: time.Now()}
+	data := Client{Uid: configure.AppConf.Key, Host: info.Hostname, Os: info.OS, Uptime: info.Uptime, Alive: time.Now()}
 	infoJson, _ := json.Marshal(data)
 	now := time.Now()
 	var msg connection.Msg
